@@ -3,51 +3,60 @@ const { MongoClient, ObjectId } = require("mongodb")
 require('dotenv').config()
 
 class UserClient extends MongoClient {
-    constructor(url, databaseName, collectionName) {
-        if (!url || !databaseName || !collectionName) {
-            throw new Error('Missing required parameters');
+
+    constructor() {
+        super(process.env.MONGODB_URL);
+        this._collection = this.db(process.env.MONGODB_DATABASE).collection(process.env.MONGODB_COLLECTION);
+    }
+
+    async init() {
+        try {
+            await this.connect();
+            console.log("Connected to database");
+
+        } catch (error) {
+            console.error('Error connecting to database:', error);
+            throw error;
         }
-        super(url);
-        this.collection = this.db(databaseName).collection(collectionName);
+    }
+
+    async disconnect() {
+        try {
+            await this.close();
+            console.log("Diconnected from database");
+
+        } catch (error) {
+            console.error('Error disconnecting to database:', error);
+            throw error;
+        }
     }
 
     async getUsers() {
         try {
-            await this.connect();
-            return await this.collection.find({}).toArray();
+            return await this._collection.find({}).toArray();
         } catch (error) {
             console.error('Error fetching users:', error);
             throw error;
-        }
-        finally {
-            await this.close();
         }
     }
 
     async getUser(id) {
         try {
-            await this.connect()
-            return await this.collection.find({ "_id": new ObjectId(id) }).toArray();
+            this.co
+            return await this._collection.find({ "_id": new ObjectId(id) }).toArray();
         } catch (error) {
             console.error('Error fetching users:', error);
             throw error;
-        }
-        finally {
-            await this.close();
         }
 
     }
 
     async deleteUser(id) {
         try {
-            await this.connect()
-            return await this.collection.deleteOne({ "_id": new ObjectId(id) });
+            return await this._collection.deleteOne({ "_id": new ObjectId(id) });
         } catch (error) {
             console.error('Error fetching users:', error);
             throw error;
-        }
-        finally {
-            await this.close();
         }
 
     }
@@ -58,15 +67,12 @@ class UserClient extends MongoClient {
         }
         try {
             await this.connect()
-            return await this.collection.insertOne(user);
+            return await this._collection.insertOne(user);
         } catch (error) {
             console.error('Error inserting user:', error);
             throw error;
         }
-        finally {
-            await this.close();
-        }
     }
 }
 
-module.exports = new UserClient(process.env.MONGODB_URL, process.env.MONGODB_DATABASE, process.env.MONGODB_COLLECTION)
+module.exports = new UserClient()
