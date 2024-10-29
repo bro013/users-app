@@ -33,5 +33,5 @@ router.route('/:id')
         const result = await userClient.deleteUser(id)
         res.json(result)
     });
-
+userClient.init()
 module.exports = router
